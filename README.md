@@ -1,6 +1,11 @@
 # eclipselink-mixed-approach-fails
 Sample project to prove that EL Mixed Approach Native EL + JPA fails for complex selection criteria mappings
 
+Stack (3 maven dependencies):
+org.eclipse.persistence:eclipselink:jar:2.6.4:compile
+com.microsoft.sqlserver:mssql-jdbc:jar:6.1.0.jre8:compile
+org.springframework.data:spring-data-jpa:jar:1.11.3.RELEASE:compile
+
 Bug: 
 ReadAllQueries are cached by name and reuse common expressions SQL by caching such as ObjectKeyExpression hasMapping and when they are evaluated in a mixed approach, they fail to find the mappings.
 
