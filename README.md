@@ -1,23 +1,27 @@
 # eclipselink-mixed-approach-fails
 Sample project to prove that EL Mixed Approach Native EL + JPA fails for complex selection criteria mappings
 
+Bug: 
+ReadAllQueries are cached by name and reuse common expressions SQL by caching such as ObjectKeyExpression hasMapping and when they are evaluated in a mixed approach, they fail to find the mappings.
+
+Steps to reproduce:
 Run com.mixed.AppRunner class to see exception
 However, when you comment out CompanyRepo activeEmployees(), it works fine:
 
-Bug:
+Reasoning:
 on App startup, EntityManager sets up the EL ServerSession from com.mixed.domain.data.SampleTOPLinkProject ORM configuration with custom mapping com.mixed.domain.data.SampleCompany#addToDescriptor that adds the right selection criteria for m_Employees collection
 
 However, when the com.mixed.data.repo.CompanyRepo.activeEmployees() JPQL query select c.m_Employees from com.mixed.domain.data.SampleCompany c where c.id = ?1 is evaluated during org.eclipse.persistence.internal.queries.ExpressionQueryMechanism#prepareReportQuerySelectAllRows, it seems to prepare the SQL correctly after setSQLStatement(statement) is done:
 
 One of the QueryKeyExpressions for key firstName sets up the mapping with hasMapping=true:
-Query Key firstName
-   Query Key m_Employees
-      Base com.mixed.domain.data.SampleCompany
-mapping = {DirectToFieldMapping@3721} "org.eclipse.persistence.mappings.DirectToFieldMapping[firstName-->Employees.FirstName]"
-hasMapping = true
+	Query Key firstName
+	   Query Key m_Employees
+	      Base com.mixed.domain.data.SampleCompany
+	mapping = {DirectToFieldMapping@3721} "org.eclipse.persistence.mappings.DirectToFieldMapping[firstName-->Employees.FirstName]"
+	hasMapping = true
 
 The SQL statement is prepared correctly:
-SQLSelectStatement(SELECT t0.Id, t0.FirstName, t0.LastName, t0.MiddleInitial, t0.Version, t0.CompanyID FROM {oj Companies t1 LEFT OUTER JOIN Employees t0 ON ((t0.CompanyID = t1.Id) AND (((t0.FirstName = ?) OR ((t0.LastName = ?) OR (t0.MiddleInitial IS NULL))) AND NOT ((t0.Version IS NULL))))} WHERE ((t1.Id = ?) AND (t1.Type = ?)))
+	SQLSelectStatement(SELECT t0.Id, t0.FirstName, t0.LastName, t0.MiddleInitial, t0.Version, t0.CompanyID FROM {oj Companies t1 LEFT OUTER JOIN Employees t0 ON ((t0.CompanyID = t1.Id) AND (((t0.FirstName = ?) OR ((t0.LastName = ?) OR (t0.MiddleInitial IS NULL))) AND NOT ((t0.Version IS NULL))))} WHERE ((t1.Id = ?) AND (t1.Type = ?)))
 
 
 The next method setCallFromStatement() seems to set the QueryKeyExpression for firstName sets hasMapping=false in the printSQL(printer) flows
@@ -33,12 +37,12 @@ And when we do get the Company and access Employees "Natively",
 When you put a breakpoint in org.eclipse.persistence.internal.queries.ExpressionQueryMechanism#buildNormalSelectStatement, you can see that the cached/cloned QueryKeyExpression 
 
 
-Query Key firstName
-   Base com.mixed.domain.data.SampleEmployee
- name = "firstName"
-...
-mapping = null
-hasMapping = false <<<
+	Query Key firstName
+	   Base com.mixed.domain.data.SampleEmployee
+	 name = "firstName"
+	...
+	mapping = null
+	hasMapping = false <<<
 
 Does not find 
 org.eclipse.persistence.internal.expressions.QueryKeyExpression#validateNode
@@ -137,57 +141,57 @@ Success stacktrace:
 Dependency list:
 $ mvn dependency:list
 
-[INFO] The following files have been resolved:
-[INFO]    com.microsoft.azure:adal4j:jar:1.0.0:compile
-[INFO]    net.jcip:jcip-annotations:jar:1.0:compile
-[INFO]    com.microsoft.azure:azure-keyvault:jar:0.9.3:compile
-[INFO]    com.sun.jersey:jersey-json:jar:1.13:compile
-[INFO]    org.codehaus.jackson:jackson-jaxrs:jar:1.9.2:compile
-[INFO]    org.springframework.data:spring-data-commons:jar:1.13.3.RELEASE:compile
-[INFO]    com.sun.xml.bind:jaxb-impl:jar:2.2.3-1:compile
-[INFO]    org.springframework:spring-tx:jar:4.3.8.RELEASE:compile
-[INFO]    org.codehaus.jackson:jackson-mapper-asl:jar:1.9.2:compile
-[INFO]    org.apache.httpcomponents:httpclient:jar:4.3.6:compile
-[INFO]    org.glassfish:javax.json:jar:1.0.4:compile
-[INFO]    org.springframework:spring-beans:jar:4.3.8.RELEASE:compile
-[INFO]    ch.qos.logback:logback-classic:jar:1.2.3:compile
-[INFO]    org.eclipse.persistence:javax.persistence:jar:2.1.1:compile
-[INFO]    com.nimbusds:oauth2-oidc-sdk:jar:4.5:compile
-[INFO]    org.springframework:spring-expression:jar:4.3.8.RELEASE:compile
-[INFO]    org.eclipse.persistence:eclipselink:jar:2.6.4:compile
-[INFO]    org.springframework:spring-aop:jar:4.3.8.RELEASE:compile
-[INFO]    com.nimbusds:nimbus-jose-jwt:jar:3.1.2:compile
-[INFO]    javax.validation:validation-api:jar:1.1.0.Final:compile
-[INFO]    com.sun.jersey:jersey-client:jar:1.13:compile
-[INFO]    org.bouncycastle:bcprov-jdk15on:jar:1.51:compile
-[INFO]    com.google.code.gson:gson:jar:2.2.4:compile
-[INFO]    org.springframework.data:spring-data-jpa:jar:1.11.3.RELEASE:compile
-[INFO]    com.microsoft.sqlserver:mssql-jdbc:jar:6.1.0.jre8:compile
-[INFO]    org.apache.httpcomponents:httpcore:jar:4.3.3:compile
-[INFO]    org.codehaus.jackson:jackson-xc:jar:1.9.2:compile
-[INFO]    com.nimbusds:lang-tag:jar:1.4:compile
-[INFO]    org.slf4j:slf4j-api:jar:1.7.24:compile
-[INFO]    org.slf4j:jcl-over-slf4j:jar:1.7.24:runtime
-[INFO]    javax.xml.bind:jaxb-api:jar:2.2.2:compile
-[INFO]    javax.mail:mail:jar:1.4.5:compile
-[INFO]    org.aspectj:aspectjrt:jar:1.8.10:compile
-[INFO]    commons-lang:commons-lang:jar:2.6:compile
-[INFO]    javax.activation:activation:jar:1.1:compile
-[INFO]    net.minidev:json-smart:jar:1.1.1:compile
-[INFO]    ch.qos.logback:logback-core:jar:1.2.3:compile
-[INFO]    org.springframework:spring-orm:jar:4.3.8.RELEASE:compile
-[INFO]    commons-codec:commons-codec:jar:1.10:compile
-[INFO]    org.apache.commons:commons-lang3:jar:3.3.1:compile
-[INFO]    org.eclipse.persistence:commonj.sdo:jar:2.1.1:compile
-[INFO]    com.h2database:h2:jar:1.4.200:compile
-[INFO]    com.microsoft.azure:azure-core:jar:0.9.3:compile
-[INFO]    javax.inject:javax.inject:jar:1:compile
-[INFO]    com.sun.jersey:jersey-core:jar:1.13:compile
-[INFO]    org.springframework:spring-jdbc:jar:4.3.8.RELEASE:compile
-[INFO]    org.codehaus.jettison:jettison:jar:1.1:compile
-[INFO]    javax.xml.stream:stax-api:jar:1.0-2:compile
-[INFO]    org.springframework:spring-context:jar:4.3.8.RELEASE:compile
-[INFO]    org.springframework:spring-core:jar:4.3.8.RELEASE:compile
-[INFO]    commons-logging:commons-logging:jar:1.1.3:compile
-[INFO]    org.codehaus.jackson:jackson-core-asl:jar:1.9.2:compile
-[INFO]    stax:stax-api:jar:1.0.1:compile
+	[INFO] The following files have been resolved:
+	[INFO]    com.microsoft.azure:adal4j:jar:1.0.0:compile
+	[INFO]    net.jcip:jcip-annotations:jar:1.0:compile
+	[INFO]    com.microsoft.azure:azure-keyvault:jar:0.9.3:compile
+	[INFO]    com.sun.jersey:jersey-json:jar:1.13:compile
+	[INFO]    org.codehaus.jackson:jackson-jaxrs:jar:1.9.2:compile
+	[INFO]    org.springframework.data:spring-data-commons:jar:1.13.3.RELEASE:compile
+	[INFO]    com.sun.xml.bind:jaxb-impl:jar:2.2.3-1:compile
+	[INFO]    org.springframework:spring-tx:jar:4.3.8.RELEASE:compile
+	[INFO]    org.codehaus.jackson:jackson-mapper-asl:jar:1.9.2:compile
+	[INFO]    org.apache.httpcomponents:httpclient:jar:4.3.6:compile
+	[INFO]    org.glassfish:javax.json:jar:1.0.4:compile
+	[INFO]    org.springframework:spring-beans:jar:4.3.8.RELEASE:compile
+	[INFO]    ch.qos.logback:logback-classic:jar:1.2.3:compile
+	[INFO]    org.eclipse.persistence:javax.persistence:jar:2.1.1:compile
+	[INFO]    com.nimbusds:oauth2-oidc-sdk:jar:4.5:compile
+	[INFO]    org.springframework:spring-expression:jar:4.3.8.RELEASE:compile
+	[INFO]    org.eclipse.persistence:eclipselink:jar:2.6.4:compile
+	[INFO]    org.springframework:spring-aop:jar:4.3.8.RELEASE:compile
+	[INFO]    com.nimbusds:nimbus-jose-jwt:jar:3.1.2:compile
+	[INFO]    javax.validation:validation-api:jar:1.1.0.Final:compile
+	[INFO]    com.sun.jersey:jersey-client:jar:1.13:compile
+	[INFO]    org.bouncycastle:bcprov-jdk15on:jar:1.51:compile
+	[INFO]    com.google.code.gson:gson:jar:2.2.4:compile
+	[INFO]    org.springframework.data:spring-data-jpa:jar:1.11.3.RELEASE:compile
+	[INFO]    com.microsoft.sqlserver:mssql-jdbc:jar:6.1.0.jre8:compile
+	[INFO]    org.apache.httpcomponents:httpcore:jar:4.3.3:compile
+	[INFO]    org.codehaus.jackson:jackson-xc:jar:1.9.2:compile
+	[INFO]    com.nimbusds:lang-tag:jar:1.4:compile
+	[INFO]    org.slf4j:slf4j-api:jar:1.7.24:compile
+	[INFO]    org.slf4j:jcl-over-slf4j:jar:1.7.24:runtime
+	[INFO]    javax.xml.bind:jaxb-api:jar:2.2.2:compile
+	[INFO]    javax.mail:mail:jar:1.4.5:compile
+	[INFO]    org.aspectj:aspectjrt:jar:1.8.10:compile
+	[INFO]    commons-lang:commons-lang:jar:2.6:compile
+	[INFO]    javax.activation:activation:jar:1.1:compile
+	[INFO]    net.minidev:json-smart:jar:1.1.1:compile
+	[INFO]    ch.qos.logback:logback-core:jar:1.2.3:compile
+	[INFO]    org.springframework:spring-orm:jar:4.3.8.RELEASE:compile
+	[INFO]    commons-codec:commons-codec:jar:1.10:compile
+	[INFO]    org.apache.commons:commons-lang3:jar:3.3.1:compile
+	[INFO]    org.eclipse.persistence:commonj.sdo:jar:2.1.1:compile
+	[INFO]    com.h2database:h2:jar:1.4.200:compile
+	[INFO]    com.microsoft.azure:azure-core:jar:0.9.3:compile
+	[INFO]    javax.inject:javax.inject:jar:1:compile
+	[INFO]    com.sun.jersey:jersey-core:jar:1.13:compile
+	[INFO]    org.springframework:spring-jdbc:jar:4.3.8.RELEASE:compile
+	[INFO]    org.codehaus.jettison:jettison:jar:1.1:compile
+	[INFO]    javax.xml.stream:stax-api:jar:1.0-2:compile
+	[INFO]    org.springframework:spring-context:jar:4.3.8.RELEASE:compile
+	[INFO]    org.springframework:spring-core:jar:4.3.8.RELEASE:compile
+	[INFO]    commons-logging:commons-logging:jar:1.1.3:compile
+	[INFO]    org.codehaus.jackson:jackson-core-asl:jar:1.9.2:compile
+	[INFO]    stax:stax-api:jar:1.0.1:compile
