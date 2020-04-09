@@ -35,6 +35,40 @@
 	</repositories>
 
 	<dependencies>
+
+		<!-- reproducible in both 2.6.4 and 2.7.4 -->
+		<dependency>
+			<groupId>org.eclipse.persistence</groupId>
+			<artifactId>eclipselink</artifactId>
+			<version>2.7.4</version>
+
+<!-- Exclude to avoid security exception with jakarta.persistence in favor of hibernate-jpa-2.1 or java-ee jar?
+[/Users/vproddaturi/work/fun/eclipselink-mixed-approach-fails/target/classes/com/mixed/spring/jpa/DatabaseQuery.class]; nested exception is java.lang.SecurityException:
+class "javax.persistence.SynchronizationType"'s signer information does not match signer information of other classes in the same package
+	at org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider.findCandidateComponents(ClassPathScanningCandidateComponentProvider.java:311)
+	at org.springframework.context.annotation.ClassPathBeanDefinitionScanner.doScan(ClassPathBeanDefinitionScanner.java:272)
+	at org.springframework.context.annotation.ComponentScanAnnotationParser.parse(ComponentScanAnnotationParser.java:135)
+-->
+			<exclusions>
+				<exclusion>
+					<groupId>org.eclipse.persistence</groupId>
+					<artifactId>jakarta.persistence</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+
+		<dependency>
+			<groupId>org.hibernate.javax.persistence</groupId>
+			<artifactId>hibernate-jpa-2.1-api</artifactId>
+			<version>1.0.2.Final</version>
+		</dependency>
+
+		<!--<dependency>
+			<groupId>org.hibernate.javax.persistence</groupId>
+			<artifactId>hibernate-jpa-2.0-api</artifactId>
+			<version>1.0.1.Final</version>
+		</dependency>-->
+
 		<dependency>
 			<groupId>org.springframework.data</groupId>
 			<artifactId>spring-data-jpa</artifactId>
@@ -45,12 +79,6 @@
 			<groupId>com.microsoft.sqlserver</groupId>
 			<artifactId>mssql-jdbc</artifactId>
 			<version>6.1.0.jre8</version>
-		</dependency>
-
-		<dependency>
-			<groupId>org.eclipse.persistence</groupId>
-			<artifactId>eclipselink</artifactId>
-			<version>2.6.4</version>
 		</dependency>
 
 		<dependency>
@@ -65,12 +93,5 @@
 			<version>1.2.3</version>
 		</dependency>
 
-		<!--
-			<dependency>
-				<groupId>org.eclipse.persistence</groupId>
-				<artifactId>javax.persistence</artifactId>
-				<version>2.0.3</version>
-			</dependency>
-		-->
 	</dependencies>
 </project>
