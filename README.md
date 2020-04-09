@@ -1,4 +1,4 @@
-# eclipselink-mixed-approach-fails
+# eclipselink-mixed-approach-fails-github
 Sample project to prove that EL Mixed Approach Native EL + JPA fails for complex selection criteria mappings
 
 Stack (3 maven dependencies):
