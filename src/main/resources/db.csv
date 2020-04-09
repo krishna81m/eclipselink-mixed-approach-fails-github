@@ -1,0 +1,72 @@
+CREATE SCHEMA "dbo";
+
+CREATE MEMORY TABLE "dbo"."Companies"(
+    "Id" INTEGER NOT NULL,
+    "Type" VARCHAR_IGNORECASE(2) DEFAULT 'B' NOT NULL,
+    "Name" VARCHAR_IGNORECASE(50),
+    "Description" VARCHAR_IGNORECASE(100),
+    "Version" INTEGER DEFAULT 1 NOT NULL
+);
+
+INSERT INTO "dbo"."Companies"(Id, Type, Name, Description) values(1, 'B', 'Test1', 'Description1');
+INSERT INTO "dbo"."Companies"(Id, Type, Name, Description) values(2, 'C', 'Test2', 'Description2');
+INSERT INTO "dbo"."Companies"(Id, Type, Name, Description) values(3, 'C', 'Test3', 'Description3');
+INSERT INTO "dbo"."Companies"(Id, Type, Name, Description) values(4, 'C', 'Test4', 'Description4');
+INSERT INTO "dbo"."Companies"(Id, Type, Name, Description) values(5, 'C', 'Test4', 'Description5');
+
+
+CREATE MEMORY TABLE "dbo"."Employees"(
+    "Id" INTEGER NOT NULL,
+    "FirstName" VARCHAR_IGNORECASE(50),
+    "LastName" VARCHAR_IGNORECASE(50),
+    "MiddleInitial" VARCHAR_IGNORECASE(10),
+    "Version" INTEGER DEFAULT 1 NOT NULL,
+    "CompanyID" INTEGER
+);
+INSERT INTO "dbo"."Employees"(Id, FirstName, LastName, MiddleInitial, Version, CompanyID) values(1, 'First1', 'Last1', 'M1', 1, 1);
+INSERT INTO "dbo"."Employees"(Id, FirstName, LastName, MiddleInitial, Version, CompanyID) values(2, 'First2', 'Last2', 'M2', 1, 1);
+INSERT INTO "dbo"."Employees"(Id, FirstName, LastName, MiddleInitial, Version, CompanyID) values(3, 'First3', 'Last3', 'M3', 1, 2);
+INSERT INTO "dbo"."Employees"(Id, FirstName, LastName, MiddleInitial, Version, CompanyID) values(4, 'First4', 'Last4', 'M4', 1, 2);
+INSERT INTO "dbo"."Employees"(Id, FirstName, LastName, MiddleInitial, Version, CompanyID) values(5, 'Deleted1', 'Delete1', 'M1', 1, 2);
+
+
+CREATE MEMORY TABLE "dbo"."Addresses"(
+    "Id" INTEGER NOT NULL,
+    "Type" VARCHAR(2),
+    "Address" VARCHAR_IGNORECASE(50),
+    "City" VARCHAR_IGNORECASE(50),
+    "State" VARCHAR_IGNORECASE(50),
+    "Version" INTEGER DEFAULT 1 NOT NULL,
+    PRIMARY KEY (Id)
+);
+
+CREATE MEMORY TABLE "dbo"."WorkLocations"(
+    "Id" INTEGER NOT NULL,
+    "Description" VARCHAR_IGNORECASE(50),
+    PRIMARY KEY (Id),
+    foreign key (Id) references Addresses(Id)
+);
+
+INSERT INTO "dbo"."Addresses"(Id, Type, Address, City, State, Version) values(1, 'W', '300 King Rd', 'San Jose', 'CA', 1);
+INSERT INTO "dbo"."WorkLocations"(Id, Description) values(1, 'Sample work location');
+
+CREATE MEMORY TABLE "dbo"."ObjectAttributes"(
+    "ObjectID" INTEGER NOT NULL,
+    "ObjectType" CHAR(2) NOT NULL,
+    "AttributeName" VARCHAR(100) NOT NULL,
+    "AttributeValue" VARCHAR(250) NULL
+);
+
+INSERT INTO "dbo"."ObjectAttributes"(ObjectID, ObjectType, AttributeName, AttributeValue) values(2, 'C', 'DC_TEST', 'TEST');
+INSERT INTO "dbo"."ObjectAttributes"(ObjectID, ObjectType, AttributeName, AttributeValue) values(1, 'C', 'DC_TEST', 'TEST');
+
+CREATE MEMORY TABLE "dbo"."CompanyAdditionalAttributes"(
+    "CompanyId" INTEGER NOT NULL,
+    "AttributeName" VARCHAR(100) NOT NULL,
+    "AttributeValue" VARCHAR(250) NULL
+);
+
+INSERT INTO "dbo"."CompanyAdditionalAttributes"(CompanyId, AttributeName, AttributeValue) values(1, 'additionName', 'TEST');
+INSERT INTO "dbo"."CompanyAdditionalAttributes"(CompanyId, AttributeName, AttributeValue) values(2, 'additionName', 'TEST');
+
+
