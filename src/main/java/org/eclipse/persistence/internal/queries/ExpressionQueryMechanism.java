@@ -41,6 +41,9 @@ import org.eclipse.persistence.internal.sessions.AbstractSession;
 import org.eclipse.persistence.descriptors.ClassDescriptor;
 import org.eclipse.persistence.internal.databaseaccess.DatabaseCall;
 
+import java.lang.reflect.Field;
+import java.util.*;
+
 /**
  * <p><b>Purpose</b>:
  * Mechanism used for all expression read queries.
@@ -547,6 +550,11 @@ public class ExpressionQueryMechanism extends StatementQueryMechanism {
         }
         
         selectStatement.setFields(getSelectionFields(selectStatement, includeAllSubclassesFields));
+
+        // optimization: only fix the cloned expressions WHEN there is an exception so we know it is modified or handled?
+        // reset QueryKeyExpressions that DO have the right expression before normalizing to prepare SQL string
+        fixClonedQueryKeyExpressions(clonedExpressions);
+
         selectStatement.normalize(getSession(), getDescriptor(), clonedExpressions);
         // Allow for joining indexes to be computed to ensure distinct rows.
         if (((ObjectLevelReadQuery)getQuery()).hasJoining()) {
@@ -555,7 +563,31 @@ public class ExpressionQueryMechanism extends StatementQueryMechanism {
 
         return selectStatement;
     }
-    
+
+    private void fixClonedQueryKeyExpressions(Map clonedExpressions) {
+        clonedExpressions.values().stream()
+            .filter(e -> e instanceof QueryKeyExpression)
+            .forEach(expression -> {
+                // only do it there is a valid case where hasMapping=false but a valid descriptor exists!!
+                QueryKeyExpression queryKeyExpression = (QueryKeyExpression) expression;
+                Expression baseExpression = queryKeyExpression.getBaseExpression();
+                if(baseExpression != null && baseExpression instanceof  DataExpression){
+                    ClassDescriptor descriptor = ((DataExpression) baseExpression).getDescriptor();
+                    if(descriptor != null){
+                        try {
+                            Field field = QueryKeyExpression.class.getDeclaredField("hasMapping");
+                            if (field != null) {
+                                field.setAccessible(true);
+                                field.setBoolean(expression, true);
+                            }
+                        } catch (NoSuchFieldException | IllegalAccessException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
+                }
+            });
+    }
+
     /**
      * Return whether to include all subclass fields in select statement or not.
      */
