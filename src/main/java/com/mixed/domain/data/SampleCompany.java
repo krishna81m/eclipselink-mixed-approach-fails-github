@@ -17,9 +17,9 @@ public class SampleCompany extends SampleBasicCompany {
         // complex EL selection criteria
         mapping.setSelectionCriteria(mapping.buildSelectionCriteria()
             .and(exp.get("firstName")
-                .equal("I")
+                .equal("First1")
                     .or(
-                        exp.get("lastName").equal("AM")
+                        exp.get("lastName").equal("Last1")
                         .or(exp.get("middleInitial").isNull())
                     )
                     .and(

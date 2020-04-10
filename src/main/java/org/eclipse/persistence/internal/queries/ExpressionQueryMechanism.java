@@ -22,28 +22,31 @@
 //       - #253: Add support for embedded constructor results with CriteriaBuilder
 package org.eclipse.persistence.internal.queries;
 
-import org.eclipse.persistence.descriptors.ClassDescriptor;
-import org.eclipse.persistence.descriptors.DescriptorQueryManager;
-import org.eclipse.persistence.descriptors.InheritancePolicy;
-import org.eclipse.persistence.exceptions.DatabaseException;
-import org.eclipse.persistence.exceptions.QueryException;
-import org.eclipse.persistence.expressions.Expression;
-import org.eclipse.persistence.expressions.ExpressionBuilder;
-import org.eclipse.persistence.internal.databaseaccess.DatabaseCall;
+import java.util.*;
 import org.eclipse.persistence.internal.databaseaccess.DatasourceCall;
 import org.eclipse.persistence.internal.databaseaccess.DatasourcePlatform;
 import org.eclipse.persistence.internal.descriptors.OptimisticLockingPolicy;
-import org.eclipse.persistence.internal.expressions.*;
 import org.eclipse.persistence.internal.helper.*;
 import org.eclipse.persistence.internal.identitymaps.CacheKey;
-import org.eclipse.persistence.internal.sessions.AbstractRecord;
-import org.eclipse.persistence.internal.sessions.AbstractSession;
-import org.eclipse.persistence.internal.sessions.UnitOfWorkImpl;
+import org.eclipse.persistence.internal.expressions.*;
+import org.eclipse.persistence.expressions.*;
 import org.eclipse.persistence.logging.SessionLog;
-import org.eclipse.persistence.mappings.*;
+import org.eclipse.persistence.mappings.AggregateCollectionMapping;
+import org.eclipse.persistence.mappings.DatabaseMapping;
+import org.eclipse.persistence.mappings.DirectCollectionMapping;
+import org.eclipse.persistence.mappings.ForeignReferenceMapping;
+import org.eclipse.persistence.mappings.ManyToManyMapping;
+import org.eclipse.persistence.mappings.RelationTableMechanism;
+import org.eclipse.persistence.exceptions.*;
+import org.eclipse.persistence.mappings.OneToOneMapping;
 import org.eclipse.persistence.queries.*;
-
-import java.util.*;
+import org.eclipse.persistence.descriptors.InheritancePolicy;
+import org.eclipse.persistence.descriptors.DescriptorQueryManager;
+import org.eclipse.persistence.internal.sessions.AbstractRecord;
+import org.eclipse.persistence.internal.sessions.UnitOfWorkImpl;
+import org.eclipse.persistence.internal.sessions.AbstractSession;
+import org.eclipse.persistence.descriptors.ClassDescriptor;
+import org.eclipse.persistence.internal.databaseaccess.DatabaseCall;
 
 /**
  * <p><b>Purpose</b>:
@@ -291,9 +294,9 @@ public class ExpressionQueryMechanism extends StatementQueryMechanism {
      * @return SQLDeleteStatement
      */
     protected SQLDeleteStatement buildDeleteAllStatement(DatabaseTable table, Expression inheritanceExpression,
-                                                         SQLCall selectCallForExist, SQLSelectStatement selectStatementForExist,
-                                                         SQLCall selectCallForNotExist, SQLSelectStatement selectStatementForNotExist,
-                                                         Collection primaryKeyFields) {
+                SQLCall selectCallForExist, SQLSelectStatement selectStatementForExist,
+                SQLCall selectCallForNotExist, SQLSelectStatement selectStatementForNotExist,
+                Collection primaryKeyFields) {
         if(selectCallForExist == null && selectCallForNotExist == null) {
             return buildDeleteStatementForDeleteAllQuery(table, inheritanceExpression);
         }
@@ -742,9 +745,9 @@ public class ExpressionQueryMechanism extends StatementQueryMechanism {
     }
 
     protected SQLUpdateAllStatement buildUpdateAllStatement(DatabaseTable table,
-                                                            HashMap databaseFieldsToValues,
-                                                            SQLCall selectCallForExist, SQLSelectStatement selectStatementForExist,
-                                                            Collection primaryKeyFields)
+                HashMap databaseFieldsToValues,
+                SQLCall selectCallForExist, SQLSelectStatement selectStatementForExist,
+                Collection primaryKeyFields)
     {
         SQLUpdateAllStatement updateAllStatement = new SQLUpdateAllStatement();
         updateAllStatement.setTable(table);
@@ -1573,7 +1576,7 @@ public class ExpressionQueryMechanism extends StatementQueryMechanism {
      * Ability to switch off AdditionalJoinExpression is required for DeleteAllQuery.
      */
     protected SQLSelectStatement createSQLSelectStatementForModifyAll(Expression whereClause, Expression inheritanceExpression,
-                                                                      ClassDescriptor desc, boolean useCustomaryInheritanceExpression, boolean shouldUseAdditionalJoinExpression)
+                                 ClassDescriptor desc, boolean useCustomaryInheritanceExpression, boolean shouldUseAdditionalJoinExpression)
     {
         ExpressionBuilder builder;
         if(whereClause != null) {
@@ -1821,7 +1824,7 @@ public class ExpressionQueryMechanism extends StatementQueryMechanism {
             if (hasMultipleCalls()) {
                 updateCalls = getCalls();
             } else {
-                updateCalls = org.eclipse.persistence.internal.helper.NonSynchronizedVector.newInstance(1);
+                updateCalls = NonSynchronizedVector.newInstance(1);
                 if (getCall() != null) {
                     updateCalls.add(getCall());
                 }
@@ -1834,26 +1837,26 @@ public class ExpressionQueryMechanism extends StatementQueryMechanism {
     	if (!(writeLock instanceof FieldExpression)) {
     		return false;
     	}
-
+    	
     	final FieldExpression fe = (FieldExpression) writeLock;
     	final DatabaseField targetField = fe.getField();
-
+    	
     	final Set keys = updateClauses.keySet();
     	for (Object key : keys) {
     		if (!(key instanceof QueryKeyExpression)) {
     			continue;
     		}
-
-    		QueryKeyExpression qke = (QueryKeyExpression) key;
+    		
+    		QueryKeyExpression qke = (QueryKeyExpression) key;   		
     		DatabaseField qkField = getDescriptor().getObjectBuilder().getFieldForQueryKeyName(qke.getName());
     		if (qkField == targetField) {
     			return true;
     		}
     	}
-
+    	
     	return false;
     }
-
+    
     /**
      * Pre-build the SQL statement from the expressions.
      */
@@ -1946,8 +1949,8 @@ public class ExpressionQueryMechanism extends StatementQueryMechanism {
             if(mapping != null && mapping.isOneToOneMapping()) {
                 fields = mapping.getFields();
                 int fieldsSize = fields.size();
-                values = org.eclipse.persistence.internal.helper.NonSynchronizedVector.newInstance(fieldsSize);
-                baseExpressions = org.eclipse.persistence.internal.helper.NonSynchronizedVector.newInstance(fieldsSize);
+                values = NonSynchronizedVector.newInstance(fieldsSize);
+                baseExpressions = NonSynchronizedVector.newInstance(fieldsSize);
                 for(int i=0; i<fieldsSize; i++) {
                     if(valueObject instanceof ConstantExpression) {
                         valueObject = ((ConstantExpression)valueObject).getValue();
@@ -1969,11 +1972,11 @@ public class ExpressionQueryMechanism extends StatementQueryMechanism {
                     baseExpressions.add(new FieldExpression((DatabaseField)fields.elementAt(i), ((QueryKeyExpression)baseExpression).getBaseExpression()));
                 }
             } else {
-                fields = org.eclipse.persistence.internal.helper.NonSynchronizedVector.newInstance(1);
+                fields = NonSynchronizedVector.newInstance(1);
                 fields.add(field);
-                values = org.eclipse.persistence.internal.helper.NonSynchronizedVector.newInstance(1);
+                values = NonSynchronizedVector.newInstance(1);
                 values.add(valueObject);
-                baseExpressions = org.eclipse.persistence.internal.helper.NonSynchronizedVector.newInstance(1);
+                baseExpressions = NonSynchronizedVector.newInstance(1);
                 baseExpressions.add(baseExpression);
             }
             int fieldsSize = fields.size();
@@ -2171,8 +2174,8 @@ public class ExpressionQueryMechanism extends StatementQueryMechanism {
 
             // before and after vectors work together: n-th member of beforeTable should
             // be updated before than n-th member of afterTable
-            Vector beforeTables = org.eclipse.persistence.internal.helper.NonSynchronizedVector.newInstance();
-            Vector afterTables = org.eclipse.persistence.internal.helper.NonSynchronizedVector.newInstance();
+            Vector beforeTables = NonSynchronizedVector.newInstance();
+            Vector afterTables = NonSynchronizedVector.newInstance();
 
             // Both keys and values are tables.
             // An entry indicates a timing conflict between the key and the value:
@@ -2261,7 +2264,7 @@ public class ExpressionQueryMechanism extends StatementQueryMechanism {
             }
 
             // This will contain tables in update order
-            Vector orderedTables = org.eclipse.persistence.internal.helper.NonSynchronizedVector.newInstance(tables_databaseFieldsToValues.size());
+            Vector orderedTables = NonSynchronizedVector.newInstance(tables_databaseFieldsToValues.size());
             // first process the tables found in beforeTables / afterTables
             while(!beforeTables.isEmpty()) {
                 // Find firstTable - the one that appears in beforeTables, but not afterTables.
@@ -2406,10 +2409,10 @@ public class ExpressionQueryMechanism extends StatementQueryMechanism {
      */
     protected void prepareUpdateAllUsingTempTables(HashMap tables_databaseFieldsToValues, HashMap<DatabaseTable, List<DatabaseField>> tablesToPrimaryKeyFields) {
         int nTables = tables_databaseFieldsToValues.size();
-        Vector createTableStatements = org.eclipse.persistence.internal.helper.NonSynchronizedVector.newInstance(nTables);
-        Vector selectStatements = org.eclipse.persistence.internal.helper.NonSynchronizedVector.newInstance(nTables);
-        Vector updateStatements = org.eclipse.persistence.internal.helper.NonSynchronizedVector.newInstance(nTables);
-        Vector cleanupStatements = org.eclipse.persistence.internal.helper.NonSynchronizedVector.newInstance(nTables);
+        Vector createTableStatements = NonSynchronizedVector.newInstance(nTables);
+        Vector selectStatements = NonSynchronizedVector.newInstance(nTables);
+        Vector updateStatements = NonSynchronizedVector.newInstance(nTables);
+        Vector cleanupStatements = NonSynchronizedVector.newInstance(nTables);
 
         Iterator itEntrySets = tables_databaseFieldsToValues.entrySet().iterator();
         while(itEntrySets.hasNext()) {
@@ -2446,7 +2449,7 @@ public class ExpressionQueryMechanism extends StatementQueryMechanism {
      * @return Vector<SQLStatement>
      */
     protected Vector buildStatementsForDeleteAllForTempTables() {
-        Vector statements = org.eclipse.persistence.internal.helper.NonSynchronizedVector.newInstance();
+        Vector statements = NonSynchronizedVector.newInstance();
 
         // retrieve rootTable and its primary key fields for composing temporary table
         DatabaseTable rootTable = getDescriptor().getMultipleTableInsertOrder().get(0);
@@ -2455,7 +2458,7 @@ public class ExpressionQueryMechanism extends StatementQueryMechanism {
         if(getDescriptor().hasInheritance()) {
             rootDescriptor = rootDescriptor.getInheritancePolicy().getRootParentDescriptor();
         }
-        Vector allFields = org.eclipse.persistence.internal.helper.NonSynchronizedVector.newInstance();
+        Vector allFields = NonSynchronizedVector.newInstance();
         Iterator it = rootDescriptor.getFields().iterator();
         while(it.hasNext()) {
             DatabaseField field = (DatabaseField)it.next();
@@ -2508,7 +2511,7 @@ public class ExpressionQueryMechanism extends StatementQueryMechanism {
      * @return Vector<SQLDeleteAllStatementForTempTable>
      */
     private Vector buildDeleteAllStatementsForTempTable(ClassDescriptor descriptor, DatabaseTable rootTable, List<DatabaseField> rootTablePrimaryKeyFields, Vector tablesToIgnore) {
-        Vector statements = org.eclipse.persistence.internal.helper.NonSynchronizedVector.newInstance();
+        Vector statements = NonSynchronizedVector.newInstance();
 
         List<DatabaseTable> tablesInInsertOrder;
         if (tablesToIgnore == null) {
@@ -2608,9 +2611,9 @@ public class ExpressionQueryMechanism extends StatementQueryMechanism {
     }
 
     protected Vector buildStatementsForUpdateAllForTempTables(DatabaseTable table, HashMap databaseFieldsToValues, List<DatabaseField> primaryKeyFields) {
-        Vector statements = org.eclipse.persistence.internal.helper.NonSynchronizedVector.newInstance(4);
+        Vector statements = NonSynchronizedVector.newInstance(4);
 
-        Vector allFields = org.eclipse.persistence.internal.helper.NonSynchronizedVector.newInstance();
+        Vector allFields = NonSynchronizedVector.newInstance();
         Iterator it = getDescriptor().getFields().iterator();
         while(it.hasNext()) {
             DatabaseField field = (DatabaseField)it.next();
@@ -2701,7 +2704,7 @@ public class ExpressionQueryMechanism extends StatementQueryMechanism {
      * Read all rows from the database. The code to retrieve the full inheritance hierarchy was removed.
      *
      * @return Vector containing the database rows.
-     * @exception DatabaseException - an error has occurred on the database.
+     * @exception  DatabaseException - an error has occurred on the database.
      */
     public Vector selectAllReportQueryRows() throws DatabaseException {
         return selectAllRowsFromTable();
@@ -2710,7 +2713,7 @@ public class ExpressionQueryMechanism extends StatementQueryMechanism {
     /**
      * Read all rows from the database.
      * @return Vector containing the database rows.
-     * @exception DatabaseException - an error has occurred on the database.
+     * @exception  DatabaseException - an error has occurred on the database.
      */
     public Vector selectAllRows() throws DatabaseException {
         // Check for multiple table inheritance which may require multiple queries.
@@ -2764,7 +2767,7 @@ public class ExpressionQueryMechanism extends StatementQueryMechanism {
     /**
      * Read all rows from the database.
      * @return Vector containing the database rows.
-     * @exception DatabaseException - an error has occurred on the database.
+     * @exception  DatabaseException - an error has occurred on the database.
      */
     public Vector selectAllRowsFromTable() throws DatabaseException {
         return super.selectAllRows();
