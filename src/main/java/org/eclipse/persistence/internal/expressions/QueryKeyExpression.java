@@ -445,7 +445,7 @@ public class QueryKeyExpression extends ObjectExpression {
 
     @Override
     public DatabaseMapping getMapping() {
-        if (!hasMapping && super.getMapping() == null) {
+        if (!hasMapping && mapping == null && super.getMapping() == null) {
             return null;
         }
 
