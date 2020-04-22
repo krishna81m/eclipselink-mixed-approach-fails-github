@@ -24,9 +24,9 @@ CREATE MEMORY TABLE "dbo"."Employees"(
     "CompanyID" INTEGER
 );
 INSERT INTO "dbo"."Employees"(Id, FirstName, LastName, MiddleInitial, Version, CompanyID) values(1, 'First1', 'Last1', 'M1', 1, 1);
-INSERT INTO "dbo"."Employees"(Id, FirstName, LastName, MiddleInitial, Version, CompanyID) values(2, 'First2', 'Last2', 'M2', 1, 1);
-INSERT INTO "dbo"."Employees"(Id, FirstName, LastName, MiddleInitial, Version, CompanyID) values(3, 'First3', 'Last3', 'M3', 1, 2);
-INSERT INTO "dbo"."Employees"(Id, FirstName, LastName, MiddleInitial, Version, CompanyID) values(4, 'First4', 'Last4', 'M4', 1, 2);
+INSERT INTO "dbo"."Employees"(Id, FirstName, LastName, MiddleInitial, Version, CompanyID) values(2, 'First1', 'Last1', 'M2', 1, 1);
+INSERT INTO "dbo"."Employees"(Id, FirstName, LastName, MiddleInitial, Version, CompanyID) values(3, 'First3', 'Last1', 'M3', 1, 2);
+INSERT INTO "dbo"."Employees"(Id, FirstName, LastName, MiddleInitial, Version, CompanyID) values(4, 'First1', 'Last4', null, 1, 2);
 INSERT INTO "dbo"."Employees"(Id, FirstName, LastName, MiddleInitial, Version, CompanyID) values(5, 'Deleted1', 'Delete1', 'M1', 1, 2);
 
 
