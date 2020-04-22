@@ -55,15 +55,14 @@ public class AppRunner {
             readObjectQuery.setReferenceClass(SampleCompany.class);
             readObjectQuery.setSelectionId(COMPANY_ID);
             SampleCompany companyByEL = (SampleCompany) jpaServerSession.executeQuery(readObjectQuery);
-            companyByEL.getEmployees();
+            List<SampleEmployee> elEmployees = companyByEL.getEmployees();
+
+            // returns a null vector of size 0
+            List<SampleEmployee> jpaEmpList = companyRepo.activeEmployees(COMPANY_ID);
+            logger.info("JPA employee list size: " + jpaEmpList.size());
 
             // access via JPA!!! using same JPA ServerSession
             SampleCompany company = (SampleCompany) companyRepo.findOne(COMPANY_ID);
-
-            // returns a null vector of size 0
-            List<SampleEmployee>  jpaEmpList = companyRepo.activeEmployees(COMPANY_ID);
-            logger.info("JPA employee list size: " + jpaEmpList.size());
-
             List<SampleEmployee> employees = company.getEmployees();
             logger.info("EL Native employee list size: " + employees.size());
 

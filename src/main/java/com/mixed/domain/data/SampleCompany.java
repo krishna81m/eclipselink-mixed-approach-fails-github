@@ -11,8 +11,8 @@ public class SampleCompany extends SampleBasicCompany {
         OneToManyMapping mapping;
 
         // Only read object attributes of type company
-        exp = new ExpressionBuilder();
         mapping = (OneToManyMapping) descriptor.getMappingForAttributeName("m_Employees");
+        exp = new ExpressionBuilder();
 
         // complex EL selection criteria
         mapping.setSelectionCriteria(mapping.buildSelectionCriteria()
