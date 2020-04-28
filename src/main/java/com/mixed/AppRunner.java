@@ -5,6 +5,7 @@ import com.mixed.domain.data.SampleCompany;
 import com.mixed.domain.data.SampleEmployee;
 import com.mixed.spring.jpa.SpringDataJpaConfig;
 import org.eclipse.persistence.jpa.JpaEntityManagerFactory;
+import org.eclipse.persistence.jpa.jpql.Assert;
 import org.eclipse.persistence.queries.ReadObjectQuery;
 import org.eclipse.persistence.sessions.server.ServerSession;
 import org.slf4j.Logger;
@@ -65,6 +66,9 @@ public class AppRunner {
             SampleCompany company = (SampleCompany) companyRepo.findOne(COMPANY_ID);
             List<SampleEmployee> employees = company.getEmployees();
             logger.info("EL Native employee list size: " + employees.size());
+
+            Assert.isTrue(jpaEmpList.size() == employees.size(), "JPA direct select and EL collection graph access don't match");
+            Assert.isTrue(jpaEmpList.size() == employees.size(), "JPA direct select and JPA entity collection graph access don't match");
 
             logger.info(">>>>>>> Successfully accessed employees subgraph in a mixed approach TopLinkProject Native way and JPA way <<<<<< ");
         } catch (Exception ex){
